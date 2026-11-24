@@ -30,7 +30,7 @@ Requisito: Docker Desktop instalado y en ejecución.
 |---|---|---|
 | Usuarios, login, roles y empleados (`usuarios/`, `config/`, `common/`) | A · Alison | Implementado |
 | Docker, repo y documentación | E · Alison | Implementado |
-| Productos y alertas (`productos/`, `alertas/`) | B · Marco | Pendiente |
+| Productos y alertas (`productos/`, `alertas/`) | B · Marco | Implementado |
 | Movimientos, ajustes e historial (`movimientos/`) | C · Antonio | Pendiente |
 | Frontend: 5 pantallas (`src/main/resources/static/`) | D · Renata | Pendiente |
 
