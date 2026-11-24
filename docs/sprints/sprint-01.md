@@ -24,8 +24,8 @@ Dejar listos el repositorio, la documentación base, el entorno Docker y el esqu
 | Crear el repositorio con el README inicial | Antonio | Hecho |
 | Repartir los roles del equipo | Equipo | Hecho |
 | Documentación base: arquitectura, stack, pruebas, bitácora, versionamiento y trazabilidad | Alison (E) | Hecho |
-| Docker: docker-compose con PostgreSQL y backend | Alison (E) | Hecho (por probar) |
-| Esqueleto Spring Boot, base de datos, login y roles, gestión de empleados | Alison (A) | Hecho (por probar) |
+| Docker: docker-compose con PostgreSQL y backend | Alison (E) | Hecho (probado) |
+| Esqueleto Spring Boot, base de datos, login y roles, gestión de empleados | Alison (A) | Hecho (probado) |
 | Productos y alertas | Marco (B) | Pendiente |
 | Movimientos, ajustes e historial | Antonio (C) | Pendiente |
 | Frontend: 5 pantallas | Renata (D) | Pendiente |
