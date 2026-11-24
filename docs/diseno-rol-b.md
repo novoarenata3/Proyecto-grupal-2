@@ -33,6 +33,35 @@ El MVP abarca acceso por roles, catálogo, entradas y salidas, ajustes, historia
 
 Acuerdo de integración por confirmar con C: cada movimiento referencia el producto con una clave foránea que impide eliminarlo mientras exista historial. Un saldo cero por sí solo no acredita que el producto nunca se haya utilizado.
 
+## Backlog de evolución de la plataforma
+
+Las historias HU09–HU16 están propuestas para después del MVP. El orden indica prioridad dentro de esta ampliación. Los ejemplos usan el mismo producto para seguir las cantidades desde la recepción hasta el despacho.
+
+|Orden / historia|Épica y usuario|Resultado esperado|Criterio de aceptación|
+|---|---|---|---|
+|9 · HU09|Catálogo · administrador|Identificar cada SKU y ubicación de bodega.|Se registran A-01 y B-01 como ubicaciones distintas. Un código ya utilizado en la misma bodega se rechaza.|
+|10 · HU10|Inventario · bodeguero|Recibir un producto por lote, ubicación y vencimiento.|Al recibir 12 unidades del lote A en A-01 y 8 del B en B-01 quedan dos saldos y 20 unidades físicas. Una ubicación desconocida impide confirmar el ingreso.|
+|11 · HU11|Pedidos · preparador|Reservar primero las unidades aptas que vencen antes (FEFO).|Si A vence antes que B y ambos están vigentes, un pedido de 14 reserva 12 de A y 2 de B. Quedan 20 físicas y 6 disponibles. Si se solicitan 21 al inicio, la reserva completa se rechaza sin alterar saldos.|
+|12 · HU12|Reposición y compras · comprador|Aprobar una sugerencia basada en la disponibilidad tras la reserva.|Con 6 disponibles, mínimo 10 y objetivo 20 se sugieren 14. Aprobar dos veces la misma sugerencia genera una sola orden por 14. El saldo físico aumenta cuando se recibe la mercancía.|
+|13 · HU13|Flota · coordinador|Asignar robot móvil autónomo (AMR), camión y muelle a la preparación y salida.|Si el muelle está ocupado, la tarea queda pendiente de asignación. Al liberarlo se vinculan los recursos al pedido y se registra el progreso del traslado.|
+|14 · HU14|Despacho · encargado de salida|Cerrar el pedido cuando se confirme la salida física.|La salida consume las 14 unidades reservadas: quedan 6 físicas, 0 reservadas y 6 disponibles. Repetir la confirmación conserva esos saldos.|
+|15 · HU15|Dashboard · supervisor|Consultar la planta interna y el patio exterior durante el despacho.|La planta interna muestra la ubicación del AMR; la externa muestra camión y muelle asignados. Cada vista indica cuándo recibió su última actualización.|
+|16 · HU16|Analítica · supervisor|Identificar vencimientos próximos e interpretar la evolución del stock.|Al elegir una bodega y un período, el reporte identifica lotes con saldo cuyo vencimiento cae en ese intervalo y permite consultar las entradas y salidas del SKU.|
+
+## Límites y propiedad de datos en la arquitectura futura
+
+Estos límites expresan quién puede modificar cada dato aunque varios módulos compartan un despliegue. En el MVP, Productos almacena el mínimo y el objetivo. Si se separa Reposición, esos parámetros se trasladarán a su módulo y el catálogo conservará los datos maestros del producto.
+
+|Capacidad|Datos que puede modificar|Cómo colaboran las demás capacidades|Historias|
+|---|---|---|---|
+|Catálogo y ubicaciones|SKU, unidad, bodega, zona y ubicación maestra.|Inventario valida referencias antes de registrar la recepción.|HU09–10|
+|Inventario|Lote, vencimiento, saldo por lote y ubicación, movimientos y asignación de unidades a una reserva.|Pedidos solicita reservar. Inventario selecciona lotes aptos, confirma cantidades y consume la reserva al despachar.|HU10–11, HU14|
+|Pedidos y preparación|Pedido, líneas, estado comercial y tarea de preparación.|Guarda la referencia de la reserva confirmada por Inventario y solicita el traslado a Flota.|HU11, HU13–14|
+|Reposición y compras|Mínimos, objetivos, sugerencias, aprobaciones y órdenes de compra.|Evalúa el disponible comunicado por Inventario. La recepción posterior se registra en Inventario con referencia a la orden.|HU12|
+|Flota y muelles|AMR, camión, ruta, ocupación de muelle, tarea de traslado y telemetría.|Comunica avance y salida. Pedidos coordina con Inventario el consumo de la reserva.|HU13–15|
+|Dashboard|Proyección de planta, estado visible y marcas de actualización.|Combina los cambios de Inventario, Compras, Pedidos y Flota. Una aprobación realizada desde la pantalla se envía a Compras.|HU12, HU15|
+|Analítica|Históricos derivados, agregaciones e indicadores.|Procesa movimientos confirmados para reconstruir tendencias y estimar riesgos de vencimiento.|HU16|
+
 ## C4 · Nivel 1 · Contexto
 
 ```mermaid
