@@ -59,16 +59,16 @@ Datos base: Leche, litros, mínimo 10, objetivo 30. Café en grano, kilogramos, 
 
 | ID | Requisito | Pasos | Resultado esperado | Resultado real | Estado |
 |---|---|---|---|---|---|
-| CP-SEG-01 | Inicio de sesión | Entrar con credenciales válidas y con inválidas | Las válidas ingresan; las inválidas se rechazan | | Pendiente |
-| CP-SEG-02 | Cuenta inicial | Entrar con la cuenta de administrador entregada | Ingresa con rol Administrador | | Pendiente |
-| CP-SEG-03 | Empleado sin gestión | Empleado intenta crear productos o cuentas | Se rechaza | | Pendiente |
-| CP-SEG-04 | Crear empleados | Administrador crea una cuenta de empleado | La cuenta puede iniciar sesión con rol Empleado | | Pendiente |
+| CP-SEG-01 | Inicio de sesión | Entrar con credenciales válidas y con inválidas | Las válidas ingresan; las inválidas se rechazan | Válidas: 200 con los datos del usuario. Inválidas o sin credenciales: 401 con mensaje JSON | Pasó |
+| CP-SEG-02 | Cuenta inicial | Entrar con la cuenta de administrador entregada | Ingresa con rol Administrador | /api/me devolvió rol ADMIN para el usuario admin | Pasó |
+| CP-SEG-03 | Empleado sin gestión | Empleado intenta crear productos o cuentas | Se rechaza | Probado en cuentas: el empleado recibió 403 en /api/empleados. Falta probar productos cuando exista ese módulo | Parcial |
+| CP-SEG-04 | Crear empleados | Administrador crea una cuenta de empleado | La cuenta puede iniciar sesión con rol Empleado | Se creó empleado1 (201) y su /api/me devolvió rol EMPLEADO | Pasó |
 
 ## Entorno
 
 | ID | Requisito | Pasos | Resultado esperado | Resultado real | Estado |
 |---|---|---|---|---|---|
-| CP-DOC-01 | Replicabilidad | En una carpeta limpia: copiar `.env.example` a `.env` y ejecutar `docker compose up -d` | El servicio `db` queda en estado `healthy` | | Pendiente |
+| CP-DOC-01 | Replicabilidad | En una carpeta limpia: copiar `.env.example` a `.env` y ejecutar `docker compose up -d` | El servicio `db` queda en estado `healthy` | Con docker compose up -d --build, db quedó healthy, el backend arrancó y Flyway aplicó V1 | Pasó |
 
 ## Cómo registrar una prueba
 
