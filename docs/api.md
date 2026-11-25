@@ -23,6 +23,8 @@ Versión 0.1. Todas las rutas (salvo la interfaz web) requieren autenticación H
 | POST | `/api/movimientos/ajustes` | Administrador | Ajusta el stock (`productoId`, `nuevoStock`, `motivo`) |
 | GET | `/api/movimientos` | Cualquiera | Historial; filtros opcionales `productoId`, `desde` y `hasta` (`yyyy-MM-dd`) |
 
+Para `POST /api/movimientos`, `tipo` admite `ENTRADA` o `SALIDA`; `cantidad` debe ser positiva y `motivo` obligatorio. El ajuste recibe `productoId`, `nuevoStock` (cero o mayor) y `motivo`; se registra como un movimiento `AJUSTE` con el stock anterior y el resultante. En el historial, `desde` y `hasta` son fechas inclusivas en UTC y se pueden combinar con `productoId`.
+
 ## Códigos de respuesta habituales
 
 | Código | Cuándo |
