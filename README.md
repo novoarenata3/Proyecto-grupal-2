@@ -58,7 +58,7 @@ Si los puertos `8080` o `5432` ya están ocupados, revisa si hay otra copia del 
 | Docker y guía de arranque | Implementado |
 | Productos y alertas (`productos/`, `alertas/`) | Implementado |
 | Movimientos, ajustes e historial (`movimientos/`) | Implementado |
-| Frontend: 5 pantallas (`src/main/resources/static/`) | Pendiente |
+| Frontend: 5 pantallas (`src/main/resources/static/`) | Integrado en main mediante el PR #8 |
 
 Las rutas que debe exponer cada módulo están en [`docs/api.md`](docs/api.md).
 
