@@ -22,7 +22,7 @@ public class Producto {
     @Column(name = "cantidad_objetivo", nullable = false)
     private BigDecimal cantidadObjetivo;
 
-    @Column(nullable = false, insertable = false, updatable = false)
+    @Column(nullable = false, insertable = false)
     private BigDecimal stock = BigDecimal.ZERO;
 
     @Column(nullable = false)
@@ -64,8 +64,17 @@ public class Producto {
     public BigDecimal getStockMinimo() { return stockMinimo; }
     public BigDecimal getCantidadObjetivo() { return cantidadObjetivo; }
     public BigDecimal getStock() { return stock; }
+
+    public void cambiarStock(BigDecimal nuevoStock) {
+        if (nuevoStock == null || nuevoStock.signum() < 0) {
+            throw new IllegalArgumentException("El stock debe ser mayor o igual a cero");
+        }
+        this.stock = nuevoStock;
+    }
+
     public boolean isActivo() { return activo; }
     public boolean isEnAlerta() { return activo && stock.compareTo(stockMinimo) <= 0; }
+
     public BigDecimal getCompraSugerida() {
         return isEnAlerta() ? cantidadObjetivo.subtract(stock) : BigDecimal.ZERO;
     }
