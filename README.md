@@ -16,12 +16,10 @@ Java 17, Spring Boot 3, Spring Security, PostgreSQL 16, Flyway y Docker. Detalle
 
 Requisito: Docker Desktop instalado y en ejecución.
 
-1. Copia las variables de ejemplo: `copy .env.example .env` (PowerShell) o `cp .env.example .env`.
-2. Construye y levanta todo: `docker compose up -d --build` (la primera vez tarda unos minutos).
+1. Copia las variables de ejemplo: `copy .env.example .env` (PowerShell) o `cp .env.example .env`. Edita `.env` y reemplaza todos los valores de ejemplo por valores propios y contraseñas largas y únicas. No compartas ni subas `.env` a Git.
+2. Construye y levanta todo: `docker compose up -d --build` (la primera vez tarda unos minutos). Compose falla si falta alguna variable requerida.
 3. Revisa que ambos servicios estén arriba: `docker compose ps`.
-4. Prueba el login con la cuenta inicial de administrador (usuario `admin`, contraseña `Admin123!`):
-   - PowerShell: `curl.exe -u admin:Admin123! http://localhost:8080/api/me`
-   - También desde Postman, con autenticación *Basic Auth*.
+4. Prueba el login con la cuenta inicial de administrador, usando `ADMIN_USERNAME` y `ADMIN_PASSWORD` configurados en `.env` (Postman, autenticación *Basic Auth*).
 5. Registros: `docker compose logs -f backend`. Apagar: `docker compose down` (con `-v` se borra la base de datos).
 
 ## Estado de los módulos

@@ -4,15 +4,15 @@ services:
     container_name: smart-inventory-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-smart_inventory}
-      POSTGRES_USER: ${POSTGRES_USER:-inventory}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-inventory123}
+      POSTGRES_DB: ${POSTGRES_DB:?Define POSTGRES_DB en .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Define POSTGRES_USER en .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
     ports:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-inventory} -d ${POSTGRES_DB:-smart_inventory}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:?Define POSTGRES_USER en .env} -d ${POSTGRES_DB:?Define POSTGRES_DB en .env}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -27,11 +27,11 @@ services:
       db:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-smart_inventory}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-inventory}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-inventory123}
-      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123!}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:?Define POSTGRES_DB en .env}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:?Define POSTGRES_USER en .env}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:?Define ADMIN_USERNAME en .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Define ADMIN_PASSWORD en .env}
     ports:
       - "8080:8080"
 
