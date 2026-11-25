@@ -99,12 +99,10 @@ Las rutas que debe exponer cada módulo están en [`docs/api.md`](docs/api.md).
 
 ## Equipo
 
-| Integrante | Rol | Entregables |
-|---|---|---|
-| 1 | Gestión y documentación | Notion, backlog, historias de usuario, kanban, actas y resumen de aportes |
-| 2 | Backend | Lógica del inventario, base de datos y Dockerfile del backend |
-| 3 | Frontend | Pantallas, conexión con la API y Dockerfile del frontend |
-| 4 · Antonio | DevOps e integraciones | GitHub (ramas y pull requests), Notion ↔ GitHub ↔ Discord, Docker Compose y README de arranque |
-| 5 | QA y arquitectura | Pruebas funcionales, bitácora de cambios, arquitectura y stack tecnológico |
-
-Falta que el equipo confirme los nombres de los integrantes 1, 2, 3 y 5.
+| Integrante | Nombre | Rol | Entregables |
+|---|---|---|---|
+| 1 | Alison | Gestión y documentación | Notion, backlog, historias de usuario, kanban, actas y resumen de aportes |
+| 2 | Marco | Backend | Lógica del inventario, base de datos y Dockerfile del backend |
+| 3 | Renata | Frontend | Pantallas, conexión con la API y Dockerfile del frontend |
+| 4 | Antonio | DevOps e integraciones | GitHub (ramas y pull requests), Notion ↔ GitHub ↔ Discord, Docker Compose y README de arranque |
+| 5 | Alison | QA y arquitectura | Pruebas funcionales, bitácora de cambios, arquitectura y stack tecnológico |
