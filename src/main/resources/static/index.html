@@ -1,3 +1,169 @@
-<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Smart Inventory</title><style>
-:root{font:16px/1.5 system-ui;color:#142d28;background:#f4f5ef}*{box-sizing:border-box}body{margin:0}header{background:#143d35;color:white;padding:18px max(5vw,20px);display:flex;align-items:center;gap:18px}header b{font-size:21px}header span{margin-left:auto}main,nav{width:min(1120px,92%);margin:auto}nav{display:flex;gap:8px;flex-wrap:wrap;padding:18px 0;border-bottom:1px solid #d0d9cf}button{font:inherit;font-weight:600;cursor:pointer;background:#215f50;color:white;border:0;border-radius:6px;padding:8px 16px}button:disabled{opacity:.6}nav button,button.alt{background:#e1ebe3;color:#184838}nav button[aria-current=true]{background:#215f50;color:white}h1{font-size:clamp(30px,5vw,44px);line-height:1.1;letter-spacing:-.04em}h2{font-size:21px}section,details{padding:22px;background:white;border:1px solid #d5ded5;border-radius:12px;margin:14px 0}section h2{margin-top:0}form{display:flex;align-items:end;flex-wrap:wrap;gap:12px}label{display:grid;font-size:14px;font-weight:600;gap:4px}input,select{font:inherit;padding:9px;border:1px solid #96a99e;border-radius:5px;max-width:100%}summary{cursor:pointer;font-weight:700}.scroll{overflow:auto}table{width:100%;border-collapse:collapse;font-size:15px}th,td{text-align:left;padding:10px;border-bottom:1px solid #e1e7de}th{color:#4d6559}td button{margin:2px;padding:5px 10px;font-size:14px}.login{max-width:400px;margin:10vh auto}.login form,.login label{display:grid;width:100%}.alert{border-left:5px solid #b78226}#mensaje:not(:empty){background:#fff3d8;padding:12px;border-radius:6px}dialog{border:1px solid #aaa;border-radius:10px;max-width:90vw}dialog::backdrop{background:#15352d80}[hidden]{display:none!important}
-</style><header><b>Smart Inventory</b><span id="identidad"></span><button hidden class="alt" id="salir">Salir</button></header><nav hidden aria-label="Navegación"></nav><main><p role="status" id="mensaje"></p><div id="vista"></div></main><dialog id="modal"><h2 id="modalTitulo"></h2><div id="modalBody"></div><p role="status" id="modalError"></p><button class="alt" id="cerrar">Cancelar</button></dialog><script src="app.js" defer></script></html>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Smart Inventory: control de productos, movimientos y alertas de stock.">
+  <meta name="theme-color" content="#143d35">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+  <title>Smart Inventory</title>
+  <style>
+    /* ---------- Base ---------- */
+    :root {
+      font: 16px/1.5 system-ui;
+      color: #142d28;
+      background: #f4f5ef;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+
+    /* ---------- Cabecera y navegación ---------- */
+    header {
+      background: #143d35;
+      color: white;
+      padding: 18px max(5vw, 20px);
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    header b { font-size: 21px; }
+    header span { margin-left: auto; }
+
+    main, nav { width: min(1120px, 92%); margin: auto; }
+    nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 18px 0;
+      border-bottom: 1px solid #d0d9cf;
+    }
+
+    /* ---------- Botones ---------- */
+    button {
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      background: #215f50;
+      color: white;
+      border: 0;
+      border-radius: 6px;
+      padding: 8px 16px;
+      transition: background .15s, transform .05s;
+    }
+    button:hover:not(:disabled) { background: #184838; }
+    button:active:not(:disabled) { transform: translateY(1px); }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    nav button, button.alt { background: #e1ebe3; color: #184838; }
+    nav button:hover:not(:disabled), button.alt:hover:not(:disabled) { background: #cfdfd3; }
+    nav button[aria-current=true] { background: #215f50; color: white; }
+
+    /* Foco visible para quienes navegan con teclado */
+    button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible {
+      outline: 3px solid #b78226;
+      outline-offset: 2px;
+    }
+
+    /* ---------- Títulos y tarjetas ---------- */
+    h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.1; letter-spacing: -.04em; }
+    h2 { font-size: 21px; }
+    section, details {
+      padding: 22px;
+      background: white;
+      border: 1px solid #d5ded5;
+      border-radius: 12px;
+      margin: 14px 0;
+    }
+    section h2 { margin-top: 0; }
+
+    /* ---------- Formularios ---------- */
+    form { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; }
+    label { display: grid; font-size: 14px; font-weight: 600; gap: 4px; }
+    input, select {
+      font: inherit;
+      padding: 9px;
+      border: 1px solid #96a99e;
+      border-radius: 5px;
+      max-width: 100%;
+    }
+    summary { cursor: pointer; font-weight: 700; }
+
+    /* ---------- Tablas ---------- */
+    .scroll { overflow: auto; max-height: 70vh; }
+    table { width: 100%; border-collapse: collapse; font-size: 15px; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e1e7de; }
+    th {
+      color: #4d6559;
+      position: sticky;      /* el encabezado queda fijo al hacer scroll */
+      top: 0;
+      background: white;
+    }
+    tbody tr:nth-child(even) { background: #f8faf6; }
+    tbody tr:hover { background: #eef4ee; }
+    td button { margin: 2px; padding: 5px 10px; font-size: 14px; }
+
+    /* ---------- Estados (listos para usar desde app.js) ---------- */
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .badge.ok   { background: #dcf1e3; color: #17603a; }
+    .badge.bajo { background: #ffe3e0; color: #9b2a1f; }
+    .badge.off  { background: #e5e7e3; color: #4d5a52; }
+
+    /* ---------- Login y avisos ---------- */
+    .login { max-width: 400px; margin: 10vh auto; }
+    .login form, .login label { display: grid; width: 100%; }
+    .alert { border-left: 5px solid #b78226; }
+    #mensaje:not(:empty) { background: #fff3d8; padding: 12px; border-radius: 6px; }
+    #mensaje.ok    { background: #dcf1e3; color: #17603a; }   /* aviso de éxito */
+    #mensaje.error { background: #ffe3e0; color: #9b2a1f; }   /* aviso de error */
+
+    /* ---------- Tarjetas-resumen del dashboard ---------- */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin: 14px 0; }
+    .stat { background: white; border: 1px solid #d5ded5; border-radius: 12px; padding: 16px; }
+    .stat small { display: block; color: #4d6559; font-weight: 600; }
+    .stat strong { font-size: 34px; line-height: 1.1; }
+    .stat.bajo strong { color: #9b2a1f; }
+    .stat.ok strong { color: #17603a; }
+
+    /* ---------- Ventana modal ---------- */
+    dialog { border: 1px solid #aaa; border-radius: 10px; max-width: 90vw; }
+    dialog::backdrop { background: #15352d80; }
+
+    [hidden] { display: none !important; }
+
+    /* ---------- Pantallas pequeñas ---------- */
+    @media (max-width: 600px) {
+      header span { margin-left: 0; width: 100%; }
+      section, details { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <b>Smart Inventory</b>
+    <span id="identidad"></span>
+    <button hidden class="alt" id="salir">Salir</button>
+  </header>
+
+  <nav hidden aria-label="Navegación"></nav>
+
+  <main>
+    <p role="status" id="mensaje"></p>
+    <div id="vista"></div>
+  </main>
+
+  <dialog id="modal">
+    <h2 id="modalTitulo"></h2>
+    <div id="modalBody"></div>
+    <p role="status" id="modalError"></p>
+    <button class="alt" id="cerrar">Cancelar</button>
+  </dialog>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
