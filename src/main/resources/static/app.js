@@ -4,12 +4,20 @@ const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g,c=>({"&":"&am
 let auth="", user=null, screen="productos", products=[], people=[], filters={};
 const titles={productos:"Productos y alertas",movimientos:"Registrar movimiento",historial:"Historial y ajustes",empleados:"Empleados"};
 const admin=()=>user?.rol==="ADMIN";
-function message(value){$("#mensaje").textContent=value}
+// MEJORA: los avisos ahora tienen tipo ("ok" en verde, "error" en rojo) para distinguir éxito de fallo
+function message(value,type="ok"){const el=$("#mensaje");el.textContent=value;el.className=type}
+// MEJORA: etiqueta de color para estados (clases .badge definidas en index.html)
+const badge=(text,kind)=>'<span class="badge '+kind+'">'+escapeHtml(text)+'</span>';
+const tipoBadge=t=>badge(t,t==="ENTRADA"?"ok":t==="SALIDA"?"bajo":"off");
 async function api(path,method="GET",data){
  const response=await fetch("/api/"+path,{method,headers:{Authorization:"Basic "+auth,...(data?{"Content-Type":"application/json"}:{})},body:data?JSON.stringify(data):undefined,cache:"no-store"});
  const raw=await response.text();
  let result; try{result=raw?JSON.parse(raw):null}catch{throw Error("Respuesta inesperada del servidor ("+response.status+")")}
- if(!response.ok){if(response.status===401 && user)login(); throw Error(result?.error||result?.message||("Error "+response.status))}
+ if(!response.ok){
+  // MEJORA: mensajes claros para el error 401 (login incorrecto o sesión vencida)
+  if(response.status===401){const had=!!user; if(had)login(); throw Error(had?"Tu sesión expiró. Inicia sesión de nuevo.":"Usuario o contraseña incorrectos.")}
+  throw Error(result?.error||result?.message||("Error "+response.status))
+ }
  return result;
 }
 function field(name,label,type="text",value="",attr="required"){
@@ -26,7 +34,7 @@ function bind(id,handler){
  const el=document.getElementById(id); if(!el)return;
  el.onsubmit=async event=>{
   event.preventDefault(); const button=event.submitter; if(button.disabled)return; button.disabled=true;
-  try{await handler(Object.fromEntries(new FormData(el)))}catch(e){if($("#modal").open)$("#modalError").textContent=e.message;else message(e.message)}finally{button.disabled=false}
+  try{await handler(Object.fromEntries(new FormData(el)))}catch(e){if($("#modal").open)$("#modalError").textContent=e.message;else message(e.message,"error")}finally{button.disabled=false}
  };
 }
 function login(){
@@ -53,19 +61,27 @@ async function saved(path,method,data,notice){
  await api(path,method,data); if($("#modal").open)$("#modal").close(); await navigate(screen,notice);
 }
 function renderProducts(alerts){
- const rows=products.map(p=>[escapeHtml(p.nombre),escapeHtml(p.unidad),p.stock,p.stockMinimo,p.cantidadObjetivo,p.activo?"Activo":"Inactivo",...(admin()?[btn("editar",p.id,"Editar")+btn("estado",p.id,p.activo?"Desactivar":"Reactivar")+btn("borrar",p.id,"Eliminar")]:[])]);
- return '<section class="alert"><h2>Alertas de compra</h2>'+table(["Producto","Disponible","Compra sugerida"],alerts.map(p=>[escapeHtml(p.nombre),escapeHtml(p.stock+" "+p.unidad),escapeHtml(p.compraSugerida+" "+p.unidad)]),"Sin alertas de compra.")+'</section>'+
+ // MEJORA: estado con etiqueta de color y stock bajo resaltado en rojo
+ const rows=products.map(p=>[escapeHtml(p.nombre),escapeHtml(p.unidad),(p.activo&&p.stock<=p.stockMinimo?badge(p.stock,"bajo"):p.stock),p.stockMinimo,p.cantidadObjetivo,p.activo?badge("Activo","ok"):badge("Inactivo","off"),...(admin()?[btn("editar",p.id,"Editar")+btn("estado",p.id,p.activo?"Desactivar":"Reactivar")+btn("borrar",p.id,"Eliminar")]:[])]);
+ // MEJORA: tarjetas-resumen en la parte superior (productos activos, en alerta y con stock suficiente)
+ const active=products.filter(p=>p.activo).length;
+ const stats='<div class="stats">'+
+  '<div class="stat"><small>Productos activos</small><strong>'+active+'</strong></div>'+
+  '<div class="stat bajo"><small>En alerta de compra</small><strong>'+alerts.length+'</strong></div>'+
+  '<div class="stat ok"><small>Con stock suficiente</small><strong>'+Math.max(active-alerts.length,0)+'</strong></div></div>';
+ return stats+'<section class="alert"><h2>Alertas de compra</h2>'+table(["Producto","Disponible","Compra sugerida"],alerts.map(p=>[escapeHtml(p.nombre),escapeHtml(p.stock+" "+p.unidad),escapeHtml(p.compraSugerida+" "+p.unidad)]),"Sin alertas de compra.")+'</section>'+
  (admin()?'<details><summary>Crear producto</summary>'+form("crear",productForm())+'</details>':"")+
- '<section><h2>Catálogo</h2>'+table(["Producto","Unidad","Stock","Mínimo","Objetivo","Estado",...(admin()?["Acciones"]:[])],rows,"Todavía no hay productos.")+'</section>';
+ // MEJORA: buscador por nombre en el catálogo (se filtra en el navegador, sin llamar al servidor)
+ '<section id="catalogo"><h2>Catálogo</h2><label>Buscar producto<input id="buscar" type="search" placeholder="Escribe un nombre…" autocomplete="off"></label>'+table(["Producto","Unidad","Stock","Mínimo","Objetivo","Estado",...(admin()?["Acciones"]:[])],rows,"Todavía no hay productos.")+'</section>';
 }
-function movement(){return '<section>'+form("mov",selectProduct()+'<label>Tipo<select name="tipo"><option>ENTRADA</option><option>SALIDA</option></select></label>'+field("cantidad","Cantidad","number","","required min=0 step=any")+field("motivo","Motivo","text","","required maxlength=500")+submit("Registrar movimiento"))+'</section>'}
+function movement(){return '<section>'+form("mov",selectProduct()+'<label>Tipo<select name="tipo"><option>ENTRADA</option><option>SALIDA</option></select></label>'+field("cantidad","Cantidad","number","","required min=0.01 step=any")+field("motivo","Motivo","text","","required maxlength=500")+submit("Registrar movimiento"))+'</section>'}
 function history(rows){
  const names=new Map(products.map(p=>[p.id,p.nombre]));
- return '<section><h2>Filtrar movimientos</h2>'+form("filtrar",selectProduct(true)+field("desde","Desde (UTC)","date",filters.desde,"")+field("hasta","Hasta (UTC)","date",filters.hasta,"")+submit("Aplicar"))+'</section><section>'+table(["Fecha local","Producto","Tipo","Anterior","Resultante","Motivo","Usuario ID"],rows.map(m=>[escapeHtml(new Date(m.fecha).toLocaleString("es-EC")),escapeHtml(names.get(m.productoId)||m.productoId),escapeHtml(m.tipo),m.stockAnterior,m.stockResultante,escapeHtml(m.motivo),m.usuarioId]),"Sin movimientos para estos filtros.")+'</section>'+
+ return '<section><h2>Filtrar movimientos</h2>'+form("filtrar",selectProduct(true)+field("desde","Desde (UTC)","date",filters.desde,"")+field("hasta","Hasta (UTC)","date",filters.hasta,"")+submit("Aplicar"))+'</section><section>'+table(["Fecha local","Producto","Tipo","Anterior","Resultante","Motivo","Usuario ID"],rows.map(m=>[escapeHtml(new Date(m.fecha).toLocaleString("es-EC")),escapeHtml(names.get(m.productoId)||m.productoId),tipoBadge(m.tipo),m.stockAnterior,m.stockResultante,escapeHtml(m.motivo),m.usuarioId]),"Sin movimientos para estos filtros.")+'</section>'+
  (admin()?'<details><summary>Ajustar inventario</summary>'+form("ajuste",selectProduct()+field("nuevoStock","Nuevo stock","number","","required min=0 step=any")+field("motivo","Motivo","text","","required maxlength=500")+submit("Guardar ajuste"))+'</details>':"");
 }
 function employees(){
- return '<details><summary>Crear empleado</summary>'+form("altaEmpleado",field("nombre","Nombre")+field("username","Usuario")+field("password","Contraseña","password")+submit("Crear empleado"))+'</details><section>'+table(["Nombre","Usuario","Rol","Estado","Acciones"],people.map(p=>[escapeHtml(p.nombre),escapeHtml(p.username),escapeHtml(p.rol),p.activo?"Activo":"Inactivo",p.rol==="EMPLEADO"?btn("empleadoEstado",p.id,p.activo?"Desactivar":"Reactivar")+btn("clave",p.id,"Cambiar contraseña"):"—"]),"Sin empleados.")+'</section>';
+ return '<details><summary>Crear empleado</summary>'+form("altaEmpleado",field("nombre","Nombre")+field("username","Usuario")+field("password","Contraseña","password")+submit("Crear empleado"))+'</details><section>'+table(["Nombre","Usuario","Rol","Estado","Acciones"],people.map(p=>[escapeHtml(p.nombre),escapeHtml(p.username),escapeHtml(p.rol),p.activo?badge("Activo","ok"):badge("Inactivo","off"),p.rol==="EMPLEADO"?btn("empleadoEstado",p.id,p.activo?"Desactivar":"Reactivar")+btn("clave",p.id,"Cambiar contraseña"):"—"]),"Sin empleados.")+'</section>';
 }
 let version=0;
 async function navigate(next,notice=""){
@@ -84,10 +100,17 @@ async function navigate(next,notice=""){
   $("#vista").innerHTML='<h1>'+titles[next]+'</h1>'+body;
   bind("crear",d=>saved("productos","POST",d,"Producto creado."));
   bind("altaEmpleado",d=>saved("empleados","POST",d,"Empleado creado."));
-  bind("mov",async d=>{await api("movimientos","POST",d);await navigate("productos","Movimiento registrado. Existencias actualizadas.")});
+  bind("mov",async d=>{
+   // MEJORA: validación en pantalla antes de enviar (evita una salida mayor al stock disponible)
+   const p=products.find(x=>x.id===Number(d.productoId));
+   if(d.tipo==="SALIDA"&&p&&Number(d.cantidad)>p.stock)throw Error("Stock insuficiente: solo hay "+p.stock+" "+p.unidad+" de "+p.nombre+".");
+   await api("movimientos","POST",d);await navigate("productos","Movimiento registrado. Existencias actualizadas.")});
   bind("ajuste",d=>saved("movimientos/ajustes","POST",d,"Ajuste registrado."));
   bind("filtrar",async d=>{filters=d;await navigate("historial")});
- }catch(e){if(current===version){if(user)$("#vista").textContent="";message(e.message)}}
+  // MEJORA: activa el buscador del catálogo (oculta las filas que no coinciden con el texto)
+  const search=$("#buscar");
+  if(search)search.oninput=()=>{const q=search.value.trim().toLowerCase();document.querySelectorAll("#catalogo tbody tr").forEach(tr=>{tr.hidden=!tr.textContent.toLowerCase().includes(q)})};
+ }catch(e){if(current===version){if(user)$("#vista").textContent="";message(e.message,"error")}}
 }
 function modal(title,html,callback){$("#modalTitulo").textContent=title;$("#modalError").textContent="";$("#modalBody").innerHTML=form("editarDatos",html);$("#modal").showModal();bind("editarDatos",callback)}
 document.addEventListener("click",e=>{
